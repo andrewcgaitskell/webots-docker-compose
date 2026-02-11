@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   webots:
-    image: cyberbotics/webots:latest
+    image: cyberbotics/webots:R2025a-ubuntu22.04
     container_name: webots
     network_mode: host
     privileged: true
