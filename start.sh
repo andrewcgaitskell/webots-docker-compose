@@ -1,3 +1,3 @@
 #!/bin/bash
 xhost +local:docker
-docker compose up
+docker compose up -d
