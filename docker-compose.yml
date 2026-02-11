@@ -2,11 +2,13 @@ version: '3.8'
 
 services:
   webots:
-    image: cyberbotics/webots:latest
+    image: cyberbotics/webots:R2023b-ubuntu22.04
     container_name: webots
+    platform: linux/arm64/v8
     
     environment:
       - DISPLAY
+      - LIBGL_ALWAYS_SOFTWARE=1
     
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -15,4 +17,4 @@ services:
     stdin_open: true
     tty: true
     
-    command: webots
+    command: webots --minimize --no-rendering
