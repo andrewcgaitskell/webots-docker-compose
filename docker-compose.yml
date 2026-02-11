@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   webots:
     image: cyberbotics/webots:R2025a-ubuntu22.04
