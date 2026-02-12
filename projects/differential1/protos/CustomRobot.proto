@@ -1,0 +1,34 @@
+#VRML_SIM R2025a utf8
+# A custom robot definition - 93mm wide x 101mm long x 10mm thick
+
+PROTO CustomRobot [
+  field SFVec3f    translation  0 0 0
+  field SFRotation rotation     0 0 1 0
+  field SFString   name         "custom_robot"
+  field SFString   controller   "void"
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    controller IS controller
+    children [
+      DEF BODY Shape {
+        appearance PBRAppearance {
+          baseColor 0.8 0.8 0.8
+          metalness 0
+          roughness 0.5
+        }
+        geometry Box {
+          size 0.093 0.101 0.010
+        }
+      }
+    ]
+    boundingObject USE BODY
+    physics Physics {
+      density -1
+      mass 0.1
+    }
+  }
+}
