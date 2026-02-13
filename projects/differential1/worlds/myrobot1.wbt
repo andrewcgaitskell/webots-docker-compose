@@ -12,8 +12,8 @@ Viewpoint {
   position 0.021799390362801187 -0.7000788077016181 0.9533693624951227
 }
 CustomRobot {
-  translation -1.2755436360169118e-19 6.272797598010541e-19 0.004959699718481888
-  rotation 0.8431972738980037 -0.49638673667979544 -0.20644264321926925 4.9083200479344313e-17
+  translation 5.237287053969501e-19 2.306007690004052e-19 0.004960758951280858
+  rotation 0.6374181362056992 -0.7504908242147234 -0.17453263994324394 6.492884103476003e-17
 }
 TexturedBackground {
 }
@@ -24,7 +24,7 @@ RectangleArena {
   floorAppearance PBRAppearance {
     baseColorMap ImageTexture {
       url [
-        ""
+        "../textures/track_pattern_webots.png"
       ]
     }
     metalness 0
