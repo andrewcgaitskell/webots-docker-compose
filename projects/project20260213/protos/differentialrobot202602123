@@ -1,0 +1,205 @@
+#VRML_SIM R2025a utf8
+
+PROTO DifferentialRobot [
+  field SFVec3f    translation  0 0.05 0  # Robot center at X=0, Y=0, Z=0.05 (wheel radius + clearance)
+  field SFRotation rotation     0 0 1 0
+  field SFString   name         "differential_robot"
+  field SFFloat    bodyLength   0.3       # 300mm front-to-back
+  field SFFloat    bodyWidth    0.2       # 200mm left-to-right
+  field SFFloat    bodyHeight   0.1       # 100mm top-to-bottom
+  field SFFloat    wheelRadius  0.04      # 40mm radius
+  field SFFloat    wheelWidth   0.02      # 20mm thick
+  field SFFloat    castorRadius 0.015     # 15mm radius
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    children [
+      # Rectangular Chassis - centered at robot origin
+      DEF BODY Shape {
+        appearance PBRAppearance {
+          baseColor 0.2 0.5 0.8  # RGB: blue-ish color
+          metalness 0.3          # 30% metallic appearance
+          roughness 0.7          # 70% rough (not very shiny)
+        }
+        geometry Box {
+          size IS bodyLength IS bodyWidth IS bodyHeight
+        }
+      }
+      
+      # Left Wheel with Motor
+      # Position: left side of robot (positive Y), centered X and Z
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          position 0           # Initial rotation angle (radians)
+          axis 0 1 0          # Rotation axis: Y-axis (left-right axis for forward motion)
+          anchor 0 0.11 0     # Joint position: X=0 (center front-back), 
+                              #                 Y=0.11 (110mm left = bodyWidth/2 + wheelWidth/2 = 100mm + 10mm),
+                              #                 Z=0 (same height as robot center)
+        }
+        device [
+          RotationalMotor {
+            name "left_motor"
+            maxVelocity 20    # 20 rad/s maximum rotation speed
+            maxTorque 10      # 10 Nm maximum torque
+          }
+          PositionSensor {
+            name "left_sensor"  # Encoder for measuring wheel rotation
+          }
+        ]
+        endPoint Solid {
+          translation 0 0.11 0  # Same as anchor - wheel center position
+          rotation 1 0 0 1.5708 # Rotate 90° around X-axis (1.5708 rad = π/2)
+                                # Makes cylinder lie horizontally (Cylinder default is vertical)
+          children [
+            DEF WHEEL_SHAPE Shape {
+              appearance PBRAppearance {
+                baseColor 0.1 0.1 0.1  # RGB: dark gray/black
+                metalness 0            # Not metallic (rubber-like)
+                roughness 1            # Very rough (maximum grip appearance)
+              }
+              geometry Cylinder {
+                height IS wheelWidth   # 0.02m (20mm) - cylinder height becomes wheel thickness
+                radius IS wheelRadius  # 0.04m (40mm) - wheel radius
+              }
+            }
+          ]
+          name "left_wheel"
+          boundingObject Cylinder {  # Physics collision shape (same as visual)
+            height IS wheelWidth
+            radius IS wheelRadius
+          }
+          physics Physics {
+            density -1      # -1 means "use mass directly, ignore density calculation"
+            mass 0.05       # 50 grams per wheel
+          }
+        }
+      }
+      
+      # Right Wheel with Motor
+      # Mirror of left wheel on right side (negative Y)
+      HingeJoint {
+        jointParameters HingeJointParameters {
+          position 0           # Initial rotation angle (radians)
+          axis 0 1 0          # Rotation axis: Y-axis (same as left wheel)
+          anchor 0 -0.11 0    # Joint position: X=0 (center front-back),
+                              #                 Y=-0.11 (-110mm = right side),
+                              #                 Z=0 (same height as robot center)
+        }
+        device [
+          RotationalMotor {
+            name "right_motor"
+            maxVelocity 20    # 20 rad/s maximum rotation speed
+            maxTorque 10      # 10 Nm maximum torque
+          }
+          PositionSensor {
+            name "right_sensor"  # Encoder for measuring wheel rotation
+          }
+        ]
+        endPoint Solid {
+          translation 0 -0.11 0  # Same as anchor - wheel center position (right side)
+          rotation 1 0 0 1.5708  # Rotate 90° around X-axis to make cylinder horizontal
+          children [
+            USE WHEEL_SHAPE      # Reuse the same wheel shape definition
+          ]
+          name "right_wheel"
+          boundingObject Cylinder {
+            height IS wheelWidth
+            radius IS wheelRadius
+          }
+          physics Physics {
+            density -1
+            mass 0.05       # 50 grams
+          }
+        }
+      }
+      
+      # Front Castor (Free-rolling sphere)
+      # Positioned at front of robot, slightly below chassis to support it
+      Solid {
+        translation 0.12 0 -0.035  # X=0.12 (120mm forward = bodyLength/2 - 30mm from front edge),
+                                   # Y=0 (centered left-right),
+                                   # Z=-0.035 (-35mm = below chassis bottom at -50mm, 
+                                   #            but castor radius 15mm means contact point at -50mm)
+        children [
+          DEF CASTOR_SHAPE Shape {
+            appearance PBRAppearance {
+              baseColor 0.3 0.3 0.3  # RGB: medium gray
+              metalness 0.5          # 50% metallic (metal ball bearing look)
+              roughness 0.5          # Medium roughness
+            }
+            geometry Sphere {
+              radius IS castorRadius  # 0.015m (15mm radius)
+            }
+          }
+        ]
+        name "castor"
+        boundingObject Sphere {  # Physics collision shape
+          radius IS castorRadius
+        }
+        physics Physics {
+          density -1
+          mass 0.01         # 10 grams (very light for minimal friction)
+        }
+      }
+      
+      # Left IR Sensor
+      # Positioned 25mm behind castor, 12.5mm to left of center
+      DistanceSensor {
+        translation 0.095 0.0125 -0.045  # X=0.095 (95mm forward = castor at 120mm - 25mm behind),
+                                         # Y=0.0125 (12.5mm left = half of 25mm spacing),
+                                         # Z=-0.045 (-45mm = below chassis, pointing at ground)
+        rotation 0 0 1 0                 # No rotation - sensor points in +X direction (forward/down)
+        children [
+          DEF IR_SENSOR_SHAPE Shape {
+            appearance PBRAppearance {
+              baseColor 0.1 0.1 0.1      # RGB: very dark (sensor appearance)
+              metalness 0.8              # 80% metallic (electronic component look)
+              roughness 0.2              # 20% rough (shiny)
+            }
+            geometry Box {
+              size 0.01 0.01 0.01        # 10mm × 10mm × 10mm cube
+            }
+          }
+        ]
+        name "ir_left"
+        lookupTable [
+          0 1000 0      # At 0mm distance: return value 1000, noise 0
+          0.05 1000 0   # At 50mm distance: return value 1000 (strong signal)
+          0.15 0 0      # At 150mm distance: return value 0 (no signal)
+                        # Linear interpolation between these points
+        ]
+        type "infra-red"    # IR sensor type
+        numberOfRays 2      # Use 2 rays for better accuracy (vs 1 ray)
+      }
+      
+      # Right IR Sensor
+      # Positioned 25mm behind castor, 12.5mm to right of center
+      DistanceSensor {
+        translation 0.095 -0.0125 -0.045  # X=0.095 (95mm forward = castor - 25mm),
+                                          # Y=-0.0125 (-12.5mm = right side),
+                                          # Z=-0.045 (-45mm below chassis)
+        rotation 0 0 1 0                  # No rotation - points forward/down
+        children [
+          USE IR_SENSOR_SHAPE             # Reuse same sensor shape
+        ]
+        name "ir_right"
+        lookupTable [
+          0 1000 0      # Same lookup table as left sensor
+          0.05 1000 0   # Strong signal 0-50mm
+          0.15 0 0      # No signal beyond 150mm
+        ]
+        type "infra-red"
+        numberOfRays 2
+      }
+    ]
+    boundingObject USE BODY  # Use chassis box as main collision shape
+    physics Physics {
+      density -1      # Use mass directly
+      mass 0.5        # 500 grams total chassis mass
+    }
+    controller "differential_controller"  # Name of controller program to run
+  }
+}
