@@ -29,6 +29,5 @@ services:
       --mode=realtime
       --stdout
       --stderr
-      --no-sandbox
       ${WORLD_FILE:-/root/projects/worlds/tpbot.wbt}
-
+      
