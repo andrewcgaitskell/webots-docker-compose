@@ -1,0 +1,50 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "../protos/TPBot.proto"
+
+WorldInfo {
+  info [
+    "Minimal default world for TPBot development."
+  ]
+  title "TPBot Default World"
+  basicTimeStep 16
+}
+
+Viewpoint {
+  orientation -0.3 0.9 0.3 1.1
+  position 0 0.9 1.1
+}
+
+Background {
+  skyColor [
+    1 1 1
+  ]
+}
+
+DirectionalLight {
+  direction 0.3 -0.3 -1
+  intensity 1.5
+  ambientIntensity 0.6
+  castShadows FALSE
+}
+
+Floor {
+  size 1 1
+  tileSize 1 1
+  appearance PBRAppearance {
+    baseColor 1 1 1
+    baseColorMap ImageTexture {
+      url [
+        "textures/line_circle.png"
+      ]
+    }
+    roughness 0.9
+    metalness 0
+  }
+}
+
+TPBot {
+  translation 0 0 0.03
+  controller "<none>"
+}
