@@ -36,6 +36,13 @@ DirectionalLight {
 # looks identical but silently fails to report red_level to the sensor ray,
 # so both sensors would read the same value everywhere regardless of the
 # printed line. This inline Solid/Plane is the fix, not a style choice.
+#
+# Plane size (0.359m x 0.612m) matches peanut_track.png's real-world canvas
+# exactly (359mm x 612mm, computed by generate_peanut_track.py from the
+# 550mm/297mm/247mm track measurements) - if the PNG is regenerated with
+# different dimensions or margin, this size must be updated to match, or the
+# 22mm line width and 15mm sensor spacing will be wrong relative to each
+# other in-sim.
 Solid {
   children [
     Shape {
@@ -43,25 +50,31 @@ Solid {
         baseColor 1 1 1
         baseColorMap ImageTexture {
           url [
-            "textures/line_circle.png"
+            "textures/peanut_track.png"
           ]
         }
         roughness 0.3
         metalness 0
       }
       geometry Plane {
-        size 1 1
+        size 0.359 0.612
       }
     }
   ]
   name "floor"
   boundingObject Plane {
-    size 1 1
+    size 0.359 0.612
   }
   locked TRUE
 }
 
+# Starting position: on the track line, not at the world/track centre (which
+# sits inside empty space between the two lobes). This places the robot on
+# the right-hand straight section, facing along it (line runs vertically at
+# roughly x=+0.137m at this height, per T1/T2 in generate_peanut_track.py).
 TPBot {
-  translation 0 0 0
+  translation 0.1373 0 0
+  rotation 0 0 1 1.5708
   controller "bang_bang_line_follower"
 }
+
