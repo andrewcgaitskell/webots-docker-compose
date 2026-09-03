@@ -195,7 +195,7 @@ PROTO TPBot [
       DistanceSensor {
         translation 0.02 0.0075 0.01
         rotation 0 1 0 1.5708
-        name "line sensor right"
+        name "line sensor left"
         type "infra-red"
         lookupTable [
           0.010 0    0
@@ -205,7 +205,7 @@ PROTO TPBot [
       DistanceSensor {
         translation 0.02 -0.0075 0.01
         rotation 0 1 0 1.5708
-        name "line sensor left"
+        name "line sensor right"
         type "infra-red"
         lookupTable [
           0.010 0    0
