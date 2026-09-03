@@ -1,0 +1,79 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "../protos/TPBot.proto"
+
+WorldInfo {
+  info [
+    "Minimal default world for TPBot development."
+  ]
+  title "TPBot Default World"
+  basicTimeStep 24
+}
+
+Viewpoint {
+  fieldOfView 0.9
+  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944
+  position 0 0 1.6
+}
+
+Background {
+  skyColor [
+    1 1 1
+  ]
+}
+
+DirectionalLight {
+  direction 0.3 -0.3 -1
+  intensity 1.5
+  ambientIntensity 0.6
+  castShadows FALSE
+}
+
+# NOT the "Floor" PROTO: Webots' infra-red DistanceSensor color-sensitivity
+# (used below by TPBot's line sensors) only evaluates correctly against a
+# literal Plane geometry - see "Line Following Behavior" in the DistanceSensor
+# reference docs. Floor.proto renders its surface as an IndexedFaceSet, which
+# looks identical but silently fails to report red_level to the sensor ray,
+# so both sensors would read the same value everywhere regardless of the
+# printed line. This inline Solid/Plane is the fix, not a style choice.
+#
+# Plane size (0.359m x 0.612m) matches peanut_track.png's real-world canvas
+# exactly (359mm x 612mm, computed by generate_peanut_track.py from the
+# 550mm/297mm/247mm track measurements) - if the PNG is regenerated with
+# different dimensions or margin, this size must be updated to match, or the
+# 22mm line width and 15mm sensor spacing will be wrong relative to each
+# other in-sim.
+Solid {
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 1 1
+        baseColorMap ImageTexture {
+          url [
+            "textures/peanut_track.png"
+          ]
+        }
+        roughness 0.3
+        metalness 0
+      }
+      geometry Plane {
+        size 0.359 0.612
+      }
+    }
+  ]
+  name "floor"
+  boundingObject Plane {
+    size 0.359 0.612
+  }
+  locked TRUE
+}
+
+# Starting position: on the track line, not at the world/track centre (which
+# sits inside empty space between the two lobes). This places the robot on
+# the right-hand straight section, facing along it (line runs vertically at
+# roughly x=+0.137m at this height, per T1/T2 in generate_peanut_track.py).
+TPBot {
+  translation 0.1373 0 0
+  rotation 0 0 1 1.5708
+  controller "bang_bang_line_follower"
+}
