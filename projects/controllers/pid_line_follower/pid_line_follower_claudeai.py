@@ -8,11 +8,11 @@ https://github.com/andrewcgaitskell/tpbot-cplusplus-codal
 Difference from bang-bang: instead of thresholding each IR sensor into a
 binary on/off reading and switching between discrete states (Straight,
 CorrectingLeft/Right, SearchingLeft/Right), this version treats the two
-raw analog sensor readings as a continuous error signal and drives a
-standard PID loop to correct heading. The line is only truly lost when
-BOTH sensors drop below a "line present" threshold - in that case we fall
-back on the same last-known-direction search behaviour as the bang-bang
-version, since a 2-sensor rig genuinely has nothing better to go on.
+binary sensor readings as an error signal and drives a standard PID loop
+to correct heading. The line is only truly lost when BOTH sensors read 0 -
+in that case we fall back on the same last-known-direction search behaviour
+as the bang-bang version, since a 2-sensor rig genuinely has nothing better
+to go on.
 
 Speed calibration is unchanged: the firmware's setWheels() takes
 arbitrary 0-100-ish "speed units". Real robot measurements gave 136mm/s
@@ -21,9 +21,9 @@ every other tuned speed constant into real mm/s, then into wheel angular
 velocity (rad/s) via the 30mm wheel radius from TPBot.proto.
 
 IMPROVEMENTS over original claudeai version:
+- Changed from analog to binary sensor inputs (matches actual hardware)
+- Simplified error calculation for binary sensors
 - Added debounce mechanism for noise immunity
-- Improved error calculation with optional normalization
-- Better integral anti-windup handling
 """
 
 from controller import Robot
@@ -72,13 +72,8 @@ DEBOUNCE_READS = 3  # Added debounce for noise immunity
 # the comment above the DistanceSensor nodes in the PROTO for the
 # derivation).
 # BLACK_THRESHOLD is kept only for reference/tuning notes; the PID loop
-# uses the raw analog values directly rather than thresholding them.
+# uses binary sensor readings directly rather than raw analog values.
 BLACK_THRESHOLD = 500
-# A sensor reading below this is treated as "seeing nothing" (pure white)
-# for the purposes of deciding whether the line is lost. Keep this well
-# below BLACK_THRESHOLD so partial/edge-of-line readings still count as
-# "line present" and feed the PID loop rather than triggering search mode.
-LINE_PRESENT_THRESHOLD = 100
 
 
 def units_to_rad_s(units):
@@ -175,27 +170,33 @@ class PIDLineFollower:
         self.state = STOPPED
         self.debounce_count = 0  # Added for noise immunity
 
-    @staticmethod
-    def compute_error(left_val, right_val):
-        """Normalised error in [-1, 1]. Positive means more line under the
-        left sensor than the right, i.e. the robot needs to turn left to
-        recentre (mirrors the bang-bang CorrectingLeft convention: left
-        wheel slower, right wheel faster)."""
-        total = left_val + right_val
-        if total <= 0:
-            return 0.0
-        return (left_val - right_val) / total
+    def compute_error(self, left_black, right_black):
+        """Calculate error from binary sensor readings.
+        
+        Both sensors see black (1) = on line, white (0) = off line.
+        Error is difference between left and right sensor readings.
+        Positive means more line under the left sensor than the right,
+        i.e. the robot needs to turn left to recentre.
+        """
+        # For binary sensors, error is simply the difference
+        error = left_black - right_black
+        
+        # Clamp error to [-1, 1] range for PID stability
+        error = max(-1.0, min(1.0, error))
+        
+        return error
 
-    def next_state(self, left_val, right_val):
-        line_present = (left_val >= LINE_PRESENT_THRESHOLD) or (right_val >= LINE_PRESENT_THRESHOLD)
+    def next_state(self, left_black, right_black):
+        # Line is present if at least one sensor detects it
+        line_present = (left_black == 1) or (right_black == 1)
 
         if line_present:
             self.ms_since_line_seen = 0
             # Track which side is currently dominant so a brief future
             # drop-out has a direction to search toward.
-            if left_val > right_val:
+            if left_black and not right_black:
                 self.last_known_direction = DIRECTION_LEFT
-            elif right_val > left_val:
+            elif right_black and not left_black:
                 self.last_known_direction = DIRECTION_RIGHT
             self.state = PID_TRACKING
             return self.state
@@ -215,9 +216,9 @@ class PIDLineFollower:
 
         return self.state
 
-    def drive(self, state, left_val, right_val):
+    def drive(self, state):
         if state == PID_TRACKING:
-            error = self.compute_error(left_val, right_val)
+            error = self.compute_error(self.ir_left.getValue(), self.ir_right.getValue())
             correction = self.pid.update(error, self.dt_s)
             self.left_motor.setVelocity(BASE_RAD + TRIM_RAD - correction)
             self.right_motor.setVelocity(BASE_RAD - TRIM_RAD + correction)
@@ -239,11 +240,11 @@ class PIDLineFollower:
               f"DEBOUNCE={DEBOUNCE_READS} reads")
 
         while self.robot.step(self.timestep) != -1:
-            left_val = self.ir_left.getValue()
-            right_val = self.ir_right.getValue()
+            left_black = self.ir_left.getValue() > BLACK_THRESHOLD
+            right_black = self.ir_right.getValue() > BLACK_THRESHOLD
 
-            state = self.next_state(left_val, right_val)
-            self.drive(state, left_val, right_val)
+            state = self.next_state(left_black, right_black)
+            self.drive(state)
 
 
 if __name__ == "__main__":
