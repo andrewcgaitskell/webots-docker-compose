@@ -38,8 +38,6 @@ K_I = 0.1      # Integral gain - accumulates past errors
 K_D = 0.5      # Derivative gain - predicts future error based on rate of change
 
 # PID state variables (reset each run)
-integral_error = 0.0
-last_error = 0.0
 dt = 0.016     # ~60Hz timestep in seconds
 
 # --- Firmware speed constants (firmware units, copied from main.cpp) ---
@@ -112,9 +110,9 @@ class PIDLineFollower:
         self.match_count = 0
         self.ms_since_line_seen = 0
         
-        # PID reset state
-        integral_error = 0.0
-        last_error = 0.0
+        # PID reset state - moved to instance variables
+        self.integral_error = 0.0
+        self.last_error = 0.0
 
     def raw_state_from_sensors(self, left_black, right_black):
         if left_black and right_black:
@@ -173,22 +171,22 @@ class PIDLineFollower:
         error = max(-1.0, min(1.0, error))
         
         # Calculate derivative term
-        derivative = (error - last_error) / dt if dt > 0 else 0.0
+        derivative = (error - self.last_error) / dt if dt > 0 else 0.0
         
         # Update integral term
-        integral_error += error * dt
+        self.integral_error += error * dt
         
         # Limit integral to prevent windup
-        integral_error = max(-10.0, min(10.0, integral_error))
+        self.integral_error = max(-10.0, min(10.0, self.integral_error))
         
         # Calculate PID output
-        pid_output = K_P * error + K_I * integral_error + K_D * derivative
+        pid_output = K_P * error + K_I * self.integral_error + K_D * derivative
         
         # Clamp PID output to reasonable range
         pid_output = max(-2.0, min(2.0, pid_output))
         
         # Update last error for next iteration
-        last_error = error
+        self.last_error = error
         
         return pid_output
 
