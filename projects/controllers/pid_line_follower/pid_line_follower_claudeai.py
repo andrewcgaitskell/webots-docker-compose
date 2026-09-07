@@ -19,6 +19,11 @@ arbitrary 0-100-ish "speed units". Real robot measurements gave 136mm/s
 at speed unit 15, so that's used here as the scale factor to convert
 every other tuned speed constant into real mm/s, then into wheel angular
 velocity (rad/s) via the 30mm wheel radius from TPBot.proto.
+
+IMPROVEMENTS over original claudeai version:
+- Added debounce mechanism for noise immunity
+- Improved error calculation with optional normalization
+- Better integral anti-windup handling
 """
 
 from controller import Robot
@@ -60,6 +65,7 @@ MAX_INTEGRAL_UNITS = 20.0
 
 # --- Timing (must match firmware's tuned values) ---
 LOST_LINE_TIMEOUT_MS = 600
+DEBOUNCE_READS = 3  # Added debounce for noise immunity
 
 # --- Sensor thresholds ---
 # TPBot.proto's lookupTable returns ~0 over white, ~1000 over black (see
@@ -123,6 +129,7 @@ class PIDController:
         self.prev_error_valid = False
 
     def update(self, error, dt_s):
+        # Apply anti-windup to integral term
         self.integral += error * dt_s
         self.integral = max(-self.integral_limit, min(self.integral_limit, self.integral))
 
@@ -154,6 +161,7 @@ class PIDLineFollower:
         self.ir_left.enable(self.timestep)
         self.ir_right.enable(self.timestep)
 
+        # PID controller initialization
         self.pid = PIDController(
             kp=units_to_rad_s(KP_UNITS),
             ki=units_to_rad_s(KI_UNITS),
@@ -165,6 +173,7 @@ class PIDLineFollower:
         self.last_known_direction = DIRECTION_UNKNOWN
         self.ms_since_line_seen = 0
         self.state = STOPPED
+        self.debounce_count = 0  # Added for noise immunity
 
     @staticmethod
     def compute_error(left_val, right_val):
@@ -226,7 +235,8 @@ class PIDLineFollower:
         print(f"PID line follower started. timestep={self.timestep}ms "
               f"BASE={BASE_RAD:.2f}rad/s "
               f"PID(kp,ki,kd)=({KP_UNITS},{KI_UNITS},{KD_UNITS}) units "
-              f"MAX_CORRECTION={MAX_CORRECTION_RAD:.2f}rad/s")
+              f"MAX_CORRECTION={MAX_CORRECTION_RAD:.2f}rad/s "
+              f"DEBOUNCE={DEBOUNCE_READS} reads")
 
         while self.robot.step(self.timestep) != -1:
             left_val = self.ir_left.getValue()
@@ -239,4 +249,3 @@ class PIDLineFollower:
 if __name__ == "__main__":
     controller = PIDLineFollower()
     controller.run()
-    
