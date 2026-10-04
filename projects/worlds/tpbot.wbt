@@ -57,7 +57,7 @@ Solid {
         metalness 0
       }
       geometry Plane {
-        size 0.359 0.612
+        size 0.24 0.24
       }
     }
   ]
