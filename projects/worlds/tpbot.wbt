@@ -50,7 +50,7 @@ Solid {
         baseColor 1 1 1
         baseColorMap ImageTexture {
           url [
-            "textures/peanut_track.png"
+            "textures/circle_R100_240mm.png"
           ]
         }
         roughness 0.3
