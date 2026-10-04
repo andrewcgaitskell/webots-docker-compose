@@ -35,7 +35,7 @@ MM_PER_SPEED_UNIT = 136.0 / 15.0
 # BASE_SPEED_UNITS = 15
 
 # In bang_bang_line_follower.py, scale down the BASE_SPEED
-CIRCLE_SCALE_FACTOR = 0.6  # Start here
+CIRCLE_SCALE_FACTOR = 0.5  # Start here
 BASE_SPEED_UNITS = int(15 * CIRCLE_SCALE_FACTOR)  # = 7-8 units
 
 TRIM_UNITS = 3
