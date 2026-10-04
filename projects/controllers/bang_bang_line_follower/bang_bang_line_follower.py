@@ -32,7 +32,12 @@ WHEEL_RADIUS_M = 0.03  # Cylinder radius in TPBot.proto
 MM_PER_SPEED_UNIT = 136.0 / 15.0
 
 # --- Firmware speed constants (firmware units, copied from main.cpp) ---
-BASE_SPEED_UNITS = 15
+# BASE_SPEED_UNITS = 15
+
+# In bang_bang_line_follower.py, scale down the BASE_SPEED
+CIRCLE_SCALE_FACTOR = 0.5  # Start here
+BASE_SPEED_UNITS = int(15 * CIRCLE_SCALE_FACTOR)  # = 7-8 units
+
 TRIM_UNITS = 3
 CORRECT_OUTER_UNITS = 22
 CORRECT_INNER_UNITS = 6
