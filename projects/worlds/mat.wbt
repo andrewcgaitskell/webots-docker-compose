@@ -1,0 +1,87 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "webots://projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "webots://projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "webots://projects/objects/floors/protos/Floor.proto"
+
+WorldInfo {
+  basicTimeStep 16
+}
+Viewpoint {
+  position 0 0 2.6
+  orientation 0 0 1 0
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+# Mat: 1.00 m (x) by 1.62 m (y), texture mapped once
+Floor {
+  size 1 1.62
+  tileSize 1 1.62
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [ "textures/mat.jpg" ]
+    }
+    roughness 1
+    metalness 0
+  }
+}
+Robot {
+  translation 0.19 -0.4 0.03
+  rotation 0 0 1 1.5708
+  name "mat_robot"
+  controller "mat_robot"
+  children [
+    # body
+    Shape {
+      appearance PBRAppearance { baseColor 0.9 0.2 0.2 }
+      geometry Box { size 0.09 0.07 0.03 }
+    }
+    # camera: front, tilted down, 160x120, ~65 deg FOV like OV2640
+    Camera {
+      translation 0.045 0 0.02
+      rotation 0 1 0 0.9
+      name "camera"
+      fieldOfView 1.13
+      width 160
+      height 120
+    }
+    # left wheel
+    HingeJoint {
+      jointParameters HingeJointParameters { axis 0 1 0  anchor 0 0.04 -0.005 }
+      device [ RotationalMotor { name "left_motor"  maxVelocity 20 } ]
+      endPoint Solid {
+        name "left_wheel"
+        translation 0 0.04 -0.005
+        rotation 1 0 0 1.5708
+        children [ Shape { appearance PBRAppearance { baseColor 0.1 0.1 0.1 } geometry Cylinder { height 0.01 radius 0.025 } } ]
+        boundingObject Cylinder { height 0.01 radius 0.025 }
+        physics Physics { }
+      }
+    }
+    # right wheel
+    HingeJoint {
+      jointParameters HingeJointParameters { axis 0 1 0  anchor 0 -0.04 -0.005 }
+      device [ RotationalMotor { name "right_motor"  maxVelocity 20 } ]
+      endPoint Solid {
+        name "right_wheel"
+        translation 0 -0.04 -0.005
+        rotation 1 0 0 1.5708
+        children [ Shape { appearance PBRAppearance { baseColor 0.1 0.1 0.1 } geometry Cylinder { height 0.01 radius 0.025 } } ]
+        boundingObject Cylinder { height 0.01 radius 0.025 }
+        physics Physics { }
+      }
+    }
+    # rear caster (frictionless ball)
+    Solid {
+      name "caster"
+      translation -0.04 0 -0.012
+      children [ Shape { geometry Sphere { radius 0.008 } } ]
+      boundingObject Sphere { radius 0.008 }
+      physics Physics { }
+    }
+  ]
+  boundingObject Box { size 0.09 0.07 0.03 }
+  physics Physics { }
+}
