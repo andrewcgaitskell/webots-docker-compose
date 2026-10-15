@@ -1,1 +1,3 @@
-docker compose -f docker-mat.yml up -d --build
+#!/bin/bash
+xhost +local:docker
+docker compose -f docker_mat.yml up -d --build
