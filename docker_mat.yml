@@ -1,7 +1,8 @@
 services:
   webots:
-    image: cyberbotics/webots:R2025a-ubuntu22.04
-    container_name: webots
+    build: .
+    image: webots-mat-image
+    container_name: webots-mat-container
     network_mode: host
     privileged: true
     restart: unless-stopped
