@@ -8,6 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.environ.get("CAPTURE_DIR", HERE)           # docker_mat.yml maps CAPTURE_DIR to a host folder
 os.makedirs(OUT, exist_ok=True)
 SAVE_STEPS = range(25, 601, 25)                      # frames to save for threshold tuning
+print("SAVE_STEPS : " , SAVE_STEPS)
 LOG_EVERY = 25
 
 robot = Robot()
@@ -33,5 +34,6 @@ while robot.step(dt) != -1:
     if n % LOG_EVERY == 0:
         print(f"step {n}: road fraction {(mask > 0).mean():.2f}")
     if n in SAVE_STEPS:
+        print("write image : ", n)
         cv2.imwrite(os.path.join(OUT, f"frame_{n:04d}.png"), bgr)                    # raw: tune on this
         cv2.imwrite(os.path.join(OUT, f"frame_{n:04d}_seg.png"), debug_montage(bgr, mask))
