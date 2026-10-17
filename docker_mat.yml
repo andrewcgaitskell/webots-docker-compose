@@ -16,13 +16,12 @@ services:
       - XAUTHORITY=/root/.Xauthority
       - WORLD_FILE=${WORLD_FILE:-/root/projects/worlds/mat.wbt}
       - CAPTURE_DIR=/root/captures
-      - CAPTURE_HOST_DIR=/home/robotuser/code/captures
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${HOME}/.Xauthority:/root/.Xauthority:ro
       - ./projects:/root/projects
-      - ${CAPTURE_HOST_DIR:-./captures}:/root/captures
+      - /home/robotuser/code/captures:/root/captures
       # - /dev/bus/usb:/dev/bus/usb
 
     shm_size: "512m"
