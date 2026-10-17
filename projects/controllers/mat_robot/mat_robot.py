@@ -7,7 +7,7 @@ from road_seg import road_mask, debug_montage
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.environ.get("CAPTURE_DIR", HERE)           # docker_mat.yml maps CAPTURE_DIR to a host folder
 os.makedirs(OUT, exist_ok=True)
-SAVE_STEPS = (50, 150, 300, 450)                     # frames to save for threshold tuning
+SAVE_STEPS = range(25, 601, 25)                      # frames to save for threshold tuning
 LOG_EVERY = 25
 
 robot = Robot()
