@@ -16,6 +16,7 @@ services:
       - XAUTHORITY=/root/.Xauthority
       - WORLD_FILE=${WORLD_FILE:-/root/projects/worlds/mat.wbt}
       - CAPTURE_DIR=/root/captures
+      - CAPTURE_HOST_DIR=/home/robotuser/code/captures
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
