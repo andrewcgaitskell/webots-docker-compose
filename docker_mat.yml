@@ -14,7 +14,7 @@ services:
       - MESA_GL_VERSION_OVERRIDE=4.5
       - MESA_GLSL_VERSION_OVERRIDE=450
       - XAUTHORITY=/root/.Xauthority
-      - WORLD_FILE=${WORLD_FILE:-/root/projects/worlds/tpbot.wbt}
+      - WORLD_FILE=${WORLD_FILE:-/root/projects/worlds/mat.wbt}
   
 
     volumes:
