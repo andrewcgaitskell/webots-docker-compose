@@ -1,0 +1,118 @@
+#VRML_SIM R2025a utf8
+
+
+WorldInfo {
+  basicTimeStep 16
+  # frictionless castors: they are fixed balls, so default friction would drag when turning
+  contactProperties [
+    ContactProperties { material1 "caster" material2 "default" coulombFriction [ 0 ] }
+  ]
+}
+Viewpoint {
+  position 0 0 2.6
+  orientation -0.5773 0.5773 0.5773 2.0944
+}
+Background {
+  skyColor [ 0.8 0.85 0.9 ]
+}
+DirectionalLight {
+  direction -0.3 -0.3 -1
+  intensity 1.2
+  ambientIntensity 0.6
+}
+# Mat: 1.00 m (x) by 1.62 m (y), texture mapped once
+# Surround (so the robot has ground if it leaves the mat)
+Solid {
+  translation 0 0 -0.002
+  name "surround"
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.4 0.25 roughness 1 metalness 0 } geometry Plane { size 4 4 } } ]
+  boundingObject Plane { size 4 4 }
+}
+Solid {
+  name "mat"
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture { url [ "textures/mat.jpg" ] }
+        roughness 1
+        metalness 0
+      }
+      geometry Plane { size 1 1.62 }
+    }
+  ]
+  boundingObject Plane { size 1 1.62 }
+}
+Robot {
+  translation 0.28 -0.4 0.035
+  rotation 0 0 1 1.5708
+  name "mat_robot"
+  controller "mat_robot"
+  children [
+    # body
+    Shape {
+      appearance PBRAppearance { baseColor 0.9 0.2 0.2 }
+      geometry Box { size 0.13 0.09 0.03 }
+    }
+    # camera: front edge (2 cm ahead of the front caster), pointing forward, angled down 15 deg, 5 cm above ground, 160x120, ~65 deg FOV like OV2640
+    Camera {
+      translation 0.065 0 0.015
+      rotation 0 1 0 0.2618
+      name "camera"
+      fieldOfView 1.13
+      width 160
+      height 120
+    }
+    # debug display: original | mask | overlay (3 x 160 by 120), drawn by the controller
+    Display {
+      name "seg_display"
+      width 480
+      height 120
+    }
+    # left wheel
+    HingeJoint {
+      jointParameters HingeJointParameters { axis 0 1 0  anchor 0 0.05 0 }
+      device [ RotationalMotor { name "left_motor"  maxVelocity 20 } ]
+      endPoint Solid {
+        name "left_wheel"
+        translation 0 0.05 0
+        rotation 1 0 0 1.5708
+        children [ Shape { appearance PBRAppearance { baseColor 0.1 0.1 0.1 } geometry Cylinder { height 0.01 radius 0.035 } } ]
+        boundingObject Cylinder { height 0.01 radius 0.035 }
+        physics Physics { }
+      }
+    }
+    # right wheel
+    HingeJoint {
+      jointParameters HingeJointParameters { axis 0 1 0  anchor 0 -0.05 0 }
+      device [ RotationalMotor { name "right_motor"  maxVelocity 20 } ]
+      endPoint Solid {
+        name "right_wheel"
+        translation 0 -0.05 0
+        rotation 1 0 0 1.5708
+        children [ Shape { appearance PBRAppearance { baseColor 0.1 0.1 0.1 } geometry Cylinder { height 0.01 radius 0.035 } } ]
+        boundingObject Cylinder { height 0.01 radius 0.035 }
+        physics Physics { }
+      }
+    }
+    # front caster (frictionless ball, 9 cm from the rear one)
+    Solid {
+      name "caster_front"
+      translation 0.045 0 -0.027
+      contactMaterial "caster"
+      children [ Shape { geometry Sphere { radius 0.008 } } ]
+      boundingObject Sphere { radius 0.008 }
+      physics Physics { }
+    }
+    # rear caster
+    Solid {
+      name "caster_rear"
+      translation -0.045 0 -0.027
+      contactMaterial "caster"
+      children [ Shape { geometry Sphere { radius 0.008 } } ]
+      boundingObject Sphere { radius 0.008 }
+      physics Physics { }
+    }
+  ]
+  boundingObject Box { size 0.13 0.09 0.03 }
+  physics Physics { }
+}
